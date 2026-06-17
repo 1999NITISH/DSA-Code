@@ -1,43 +1,49 @@
 class Solution {
     public char processStr(String s, long k) {
         int n = s.length();
-        long[] length = new long[n + 1];  // length[i] = result length after processing s[0..i-1]
-        
+
+        long[] len = new long[n + 1];
+
         for (int i = 0; i < n; i++) {
-            char ch = s.charAt(i);
-            if (Character.isLowerCase(ch)) {
-                length[i + 1] = length[i] + 1;
-            } else if (ch == '*') {
-                length[i + 1] = Math.max(0, length[i] - 1);
-            } else if (ch == '#') {
-                length[i + 1] = Math.min(1_000_000_000_000_000L, length[i] * 2);
-            } else if (ch == '%') {
-                length[i + 1] = length[i];
+            char c = s.charAt(i);
+
+            if (c >= 'a' && c <= 'z') {
+                len[i + 1] = len[i] + 1;
+            } else if (c == '*') {
+                len[i + 1] = Math.max(0, len[i] - 1);
+            } else if (c == '#') {
+                len[i + 1] = len[i] * 2;
+            } else { // '%'
+                len[i + 1] = len[i];
             }
         }
 
-        if (k >= length[n]) return '.';
+        if (k >= len[n]) {
+            return '.';
+        }
 
-        // Backtrack from the end to find the k-th character
         for (int i = n - 1; i >= 0; i--) {
-            char ch = s.charAt(i);
-            if (Character.isLowerCase(ch)) {
-                if (k == length[i]) return ch;
-                // Else move left
-            } else if (ch == '*') {
-                if (length[i] < length[i + 1]) {
-                    k += 1; // * removed a character, so we simulate undoing that
+            char c = s.charAt(i);
+
+            long before = len[i];
+            long after = len[i + 1];
+
+            if (c >= 'a' && c <= 'z') {
+                if (k == before) {
+                    return c;
                 }
-            } else if (ch == '#') {
-                if (k >= length[i]) {
-                    k -= length[i];  // It came from the second half of duplicated string
+            } 
+            else if (c == '#') {
+                k %= before;
+            } 
+            else if (c == '%') {
+                if (before > 0) {
+                    k = before - 1 - k;
                 }
-                // Else it came from the first half, k remains the same
-            } else if (ch == '%') {
-                k = length[i] - 1 - k; // reverse: position changes
             }
+            // '*' does not affect k
         }
 
-        return '.'; // fallback, shouldn't reach here
+        return '.';
     }
 }
